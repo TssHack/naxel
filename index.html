@@ -1,0 +1,1829 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAXEL - خالق گرافیکی و ادیتور ویدیو</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-purple: #8b5cf6;
+            --primary-cyan: #06b6d4;
+            --primary-pink: #ec4899;
+            --primary-green: #10b981;
+            --bg-dark: #0a0a0f;
+            --bg-darker: #050508;
+            --bg-card: #1a1a2e;
+            --text-primary: #ffffff;
+            --text-secondary: #b4b4c8;
+            --accent-glow: #8b5cf6;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, var(--primary-purple), var(--primary-cyan), var(--primary-pink), var(--primary-green));
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Floating particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--primary-cyan);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1rem 2rem;
+            background: rgba(10, 10, 15, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--primary-purple), var(--primary-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
+            cursor: pointer;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        nav a:hover {
+            color: var(--primary-cyan);
+            text-shadow: 0 0 10px var(--primary-cyan);
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(45deg, var(--primary-purple), var(--primary-cyan));
+            transition: width 0.3s ease;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, var(--primary-purple), var(--primary-cyan), var(--primary-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: textGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes textGlow {
+            from {
+                text-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+            }
+            to {
+                text-shadow: 0 0 30px rgba(6, 182, 212, 0.8);
+            }
+        }
+
+        .hero-content h2 {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-weight: 400;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--primary-purple), var(--primary-cyan));
+            color: white;
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary-cyan);
+            border: 2px solid var(--primary-cyan);
+        }
+
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        /* Sections */
+        .section {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section h2 {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            background: linear-gradient(45deg, var(--primary-purple), var(--primary-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* About Section */
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .about-image {
+            text-align: center;
+        }
+
+        .avatar {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary-purple), var(--primary-cyan));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            font-weight: 900;
+            color: white;
+            margin: 0 auto;
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3);
+            animation: avatarFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes avatarFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .about-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--text-secondary);
+        }
+
+        .skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .skill-tag {
+            padding: 0.5rem 1rem;
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid var(--primary-purple);
+            border-radius: 25px;
+            font-size: 0.9rem;
+            color: var(--primary-purple);
+            transition: all 0.3s ease;
+        }
+
+        .skill-tag:hover {
+            background: var(--primary-purple);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Portfolio Grid */
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .portfolio-item {
+            background: var(--bg-card);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 1px solid rgba(139, 92, 246, 0.1);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .portfolio-item:hover {
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 0 30px 60px rgba(139, 92, 246, 0.3);
+            border-color: var(--primary-purple);
+        }
+
+        .portfolio-image-container {
+            position: relative;
+            height: 250px;
+            overflow: hidden;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .portfolio-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 20px 20px 0 0;
+            transition: transform 0.4s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            pointer-events: none;
+        }
+
+        .portfolio-item:hover .portfolio-image {
+            transform: scale(1.1);
+        }
+
+        .portfolio-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(139, 92, 246, 0.8), rgba(6, 182, 212, 0.8));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .portfolio-item:hover .portfolio-overlay {
+            opacity: 1;
+        }
+
+        .portfolio-content {
+            padding: 1.5rem;
+        }
+
+        .portfolio-content h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .portfolio-content p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(139, 92, 246, 0.3);
+            border-top: 3px solid var(--primary-purple);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Image Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 30px 60px rgba(139, 92, 246, 0.5);
+            animation: scaleIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        @keyframes scaleIn {
+            from { 
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to { 
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 20px;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            pointer-events: none;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--primary-purple);
+            transform: scale(1.1);
+        }
+
+        .modal-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .modal-info h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-info p {
+            opacity: 0.8;
+        }
+
+        /* Services */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .service-card {
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid rgba(139, 92, 246, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, var(--primary-purple), var(--primary-cyan));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .service-card:hover::before {
+            opacity: 0.1;
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary-purple);
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
+        }
+
+        .service-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, var(--primary-purple), var(--primary-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            z-index: 1;
+        }
+
+        .service-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .service-card p {
+            color: var(--text-secondary);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Contact Section */
+        .contact-content {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .contact-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border-radius: 15px;
+            border: 1px solid rgba(139, 92, 246, 0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .contact-item:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-cyan);
+            box-shadow: 0 10px 20px rgba(6, 182, 212, 0.2);
+        }
+
+        .contact-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-cyan);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--bg-darker);
+            padding: 3rem 2rem 1rem;
+            text-align: center;
+            border-top: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--primary-purple), var(--primary-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .footer-text {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            background: var(--bg-card);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 50%;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            background: var(--primary-purple);
+            color: white;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);
+        }
+
+        .copyright {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(139, 92, 246, 0.1);
+            padding-top: 1rem;
+        }
+
+        /* Error Message */
+        .error-message {
+            text-align: center;
+            color: var(--primary-pink);
+            padding: 2rem;
+            font-size: 1.1rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            nav ul {
+                gap: 1rem;
+            }
+
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .about-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .avatar {
+                width: 200px;
+                height: 200px;
+                font-size: 3rem;
+            }
+
+            .contact-info {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .contact-item {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .modal-content {
+                max-width: 95vw;
+                max-height: 95vh;
+            }
+
+            .modal-info {
+                padding: 1rem;
+            }
+
+            .modal-close {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Scroll animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-darker);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, var(--primary-purple), var(--primary-cyan));
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, var(--primary-cyan), var(--primary-pink));
+        }
+
+        /* Prevent right-click and drag */
+        .no-context {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-animation"></div>
+    
+    <!-- Floating Particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">NAXEL</div>
+            <nav>
+                <ul>
+                    <li><a href="#home">خانه</a></li>
+                    <li><a href="#about">درباره من</a></li>
+                    <li><a href="#portfolio">نمونه کارها</a></li>
+                    <li><a href="#services">خدمات</a></li>
+                    <li><a href="#contact">تماس</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content fade-in">
+            <h1>NAXEL</h1>
+            <h2>خالق گرافیکی • ادیتور ویدیو • طراح لوگو</h2>
+            <div class="hero-buttons">
+                <a href="#portfolio" class="btn btn-primary">مشاهده نمونه کارها</a>
+                <a href="#contact" class="btn btn-secondary">تماس با من</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+<section class="section" id="about">
+    <h2 class="fade-in">درباره من</h2>
+    <div class="about-content fade-in">
+        <div class="about-image">
+            <div class="avatar"></div>
+        </div>
+        <div class="about-text">
+            <p>سلام! من یک خالق گرافیکی حرفه‌ای و ادیتور ویدیو با سال‌ها تجربه در صنعت هستم. تخصص من در طراحی لوگوهای منحصر به فرد، ادیت ویدیوهای خلاقانه و ساخت محتوای بصری چشم‌نواز است.</p>
+            <p>با استفاده از جدیدترین تکنیک‌ها و ابزارهای حرفه‌ای، پروژه‌های شما را به واقعیت تبدیل می‌کنم. هدف من ایجاد آثاری است که نه تنها زیبا باشند، بلکه پیام شما را به بهترین شکل منتقل کنند.</p>
+
+            <div class="skills">
+                <span class="skill-tag">طراحی لوگو</span>
+                <span class="skill-tag">ادیت ویدیو</span>
+                <span class="skill-tag">موشن گرافیک</span>
+                <span class="skill-tag">Adobe After Effects</span>
+                <span class="skill-tag">Adobe Premiere</span>
+                <span class="skill-tag">Photoshop</span>
+                <span class="skill-tag">Illustrator</span>
+                <span class="skill-tag">Cinema 4D</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- فونت فارسی -->
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;700&display=swap" rel="stylesheet">
+
+<style>
+body {
+    font-family: 'Vazirmatn', sans-serif;
+}
+
+.about-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    align-items: flex-start;
+    margin-top: 20px;
+}
+
+.about-image {
+    flex: 0 0 180px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.avatar {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: url('img/avtar.png') no-repeat center center;
+    background-size: cover;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.avatar:hover {
+    transform: scale(1.08) rotate(1deg);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+}
+
+.about-text {
+    flex: 1;
+    min-width: 250px;
+    color: #ccc;
+    line-height: 1.8;
+}
+
+.skills {
+    margin-top: 15px;
+}
+
+.skill-tag {
+    display: inline-block;
+    background: linear-gradient(135deg, #37AEE2, #1E96C8);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 25px;
+    margin: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 3px 8px rgba(55, 174, 226, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.skill-tag:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 15px rgba(55, 174, 226, 0.5);
+}
+
+/* ریسپانسیو موبایل */
+@media (max-width: 768px) {
+    .about-content {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .about-image {
+        margin-bottom: 20px;
+    }
+
+    .about-text {
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .avatar {
+        width: 140px;
+        height: 140px;
+    }
+
+    .skill-tag {
+        font-size: 12px;
+        padding: 4px 10px;
+    }
+}
+</style>
+
+
+
+    <!-- Portfolio Section -->
+    <section class="section" id="portfolio">
+        <h2 class="fade-in">نمونه کارها</h2>
+        <div class="portfolio-grid" id="portfolioGrid">
+            <!-- Portfolio items will be loaded here by TypeScript -->
+        </div>
+    </section>
+
+    <!-- TypeScript Code -->
+    <script type="text/javascript">
+        "use strict";
+
+        // TypeScript-style interfaces and types
+        class PortfolioManager {
+            constructor() {
+                this.portfolioGrid = document.getElementById('portfolioGrid');
+                this.modal = document.getElementById('imageModal');
+                this.modalImage = document.getElementById('modalImage');
+                this.modalTitle = document.getElementById('modalTitle');
+                this.modalDescription = document.getElementById('modalDescription');
+                this.supportedFormats = ['.png', '.jpeg', '.png', '.webp'];
+                this.imageData = [];
+                
+                this.init();
+            }
+
+            async init() {
+                try {
+                    await this.loadPortfolioImages();
+                    this.setupEventListeners();
+                    this.initAnimations();
+                } catch (error) {
+                    this.handleError('خطا در بارگذاری نمونه کارها', error);
+                }
+            }
+
+            async loadPortfolioImages() {
+                const loadingHtml = `
+                    <div class="portfolio-item fade-in">
+                        <div class="portfolio-image-container">
+                            <div class="loading-spinner"></div>
+                        </div>
+                        <div class="portfolio-content">
+                            <h3>در حال بارگذاری...</h3>
+                            <p>لطفاً صبر کنید</p>
+                        </div>
+                    </div>
+                `;
+                
+                this.portfolioGrid.innerHTML = loadingHtml.repeat(6);
+
+                try {
+                    // Try to read files from img directory
+                    const imageFiles = await this.scanImageDirectory();
+                    
+                    if (imageFiles.length === 0) {
+                        // If no images found, create demo portfolio
+                        this.createDemoPortfolio();
+                        return;
+                    }
+
+                    this.imageData = imageFiles;
+                    this.renderPortfolio();
+                    
+                } catch (error) {
+                    console.warn('Could not access img directory, creating demo portfolio');
+                    this.createDemoPortfolio();
+                }
+            }
+
+            async scanImageDirectory() {
+                const imageFiles = [];
+                const possibleNames = [
+                    'logo1', 'logo2', 'logo3', 'logo4', 'logo5',
+                    'design1', 'design2', 'design3', 'design4', 'design5',
+                    'video1', 'video2', 'motion1', 'motion2',
+                    'gaming1', 'gaming2', 'brand1', 'brand2'
+                ];
+
+                for (const name of possibleNames) {
+                    for (const format of this.supportedFormats) {
+                        try {
+                            const imagePath = `img/${name}${format}`;
+                            
+                            // Check if file exists using fetch
+                            const response = await fetch(imagePath, { method: 'HEAD' });
+                            if (response.ok) {
+                                imageFiles.push({
+                                    path: imagePath,
+                                    name: this.generateTitle(name),
+                                    description: this.generateDescription(name),
+                                    category: this.getCategory(name)
+                                });
+                            }
+                        } catch (error) {
+                            // File doesn't exist, continue
+                            continue;
+                        }
+                    }
+                }
+
+                return imageFiles;
+            }
+
+            generateTitle(filename) {
+                const titleMap = {
+                    'logo': 'طراحی لوگو حرفه‌ای',
+                    'design': 'طراحی گرافیکی',
+                    'video': 'ادیت ویدیو',
+                    'motion': 'موشن گرافیک',
+                    'gaming': 'طراحی گیمینگ',
+                    'brand': 'طراحی برند'
+                };
+
+                for (const [key, value] of Object.entries(titleMap)) {
+                    if (filename.includes(key)) {
+                        return value;
+                    }
+                }
+                return 'نمونه کار حرفه‌ای';
+            }
+
+            generateDescription(filename) {
+                const descMap = {
+                    'logo': 'طراحی لوگوی منحصر به فرد با رویکرد مدرن و خلاقانه',
+                    'design': 'طراحی گرافیکی با کیفیت بالا و جزئیات دقیق',
+                    'video': 'ادیت ویدیو با افکت‌های حرفه‌ای و کیفیت بی‌نظیر',
+                    'motion': 'انیمیشن و موشن گرافیک با تکنیک‌های پیشرفته',
+                    'gaming': 'طراحی مخصوص گیمینگ با المان‌های جذاب',
+                    'brand': 'طراحی هویت بصری کامل برای برند'
+                };
+
+                for (const [key, value] of Object.entries(descMap)) {
+                    if (filename.includes(key)) {
+                        return value;
+                    }
+                }
+                return 'نمونه کار با کیفیت حرفه‌ای و طراحی منحصر به فرد';
+            }
+
+            getCategory(filename) {
+                if (filename.includes('logo')) return 'logo';
+                if (filename.includes('video')) return 'video';
+                if (filename.includes('motion')) return 'motion';
+                if (filename.includes('gaming')) return 'gaming';
+                if (filename.includes('brand')) return 'brand';
+                return 'design';
+            }
+
+            createDemoPortfolio() {
+                const demoData = [
+                    { path: 'img/logo1.png', category: 'logo' },
+                    { path: 'img/logo2.png', category: 'logo' },
+                    { path: 'img/logo3.png', category: 'logo' },
+                    { path: 'img/logo4.png', category: 'logo' },
+                    { path: 'img/logo5.png', category: 'logo' },
+                    { path: 'img/logo6.png', category: 'logo' },
+                    { path: 'img/logo7.png', category: 'logo' },
+                    { path: 'img/logo8.png', category: 'logo' },
+                    { path: 'img/logo9.png', category: 'logo' },
+                    { path: 'img/logo10.png', category: 'logo' },
+                    { path: 'img/logo11.png', category: 'logo' },
+                    { path: 'img/logo12.png', category: 'logo' },
+                    { path: 'img/logo13.png', category: 'logo' },
+                    { path: 'img/logo14.png', category: 'logo' },
+                    { path: 'img/logo15.png', category: 'logo' },
+                    { path: 'img/logo16.png', category: 'logo' },
+                    { path: 'img/logo17.png', category: 'logo' },
+                    { path: 'img/logo18.png', category: 'logo' },
+                    { path: 'img/logo19.png', category: 'logo' },
+                    { path: 'img/logo20.png', category: 'logo' },
+                    { path: 'img/logo21.png', category: 'logo' },
+                    { path: 'img/logo22.png', category: 'logo' },
+                    { path: 'img/logo23.png', category: 'logo' },
+                    { path: 'img/logo24.png', category: 'logo' },
+                    { path: 'img/logo25.png', category: 'logo' },
+                    { path: 'img/logo26.png', category: 'logo' },
+                    { path: 'img/logo27.png', category: 'logo' },
+                    { path: 'img/logo28.png', category: 'logo' },
+                    { path: 'img/logo29.png', category: 'logo' },
+                    { path: 'img/logo30.png', category: 'logo' },
+                    { path: 'img/logo31.png', category: 'logo' },
+                    { path: 'img/logo32.png', category: 'logo' },
+                    { path: 'img/logo33.png', category: 'logo' },
+                 ]; 
+
+    this.imageData = demoData;
+    this.renderPortfolio();
+}
+
+            renderPortfolio() {
+    const portfolioHtml = this.imageData.map((item, index) => `
+        <div class="portfolio-item fade-in" data-index="${index}">
+            <div class="portfolio-image-container">
+                <img src="${item.path}" 
+                     alt="Portfolio Image" 
+                     class="portfolio-image no-context circle-image"
+                     loading="lazy"
+                     oncontextmenu="return false;"
+                     ondragstart="return false;">
+                <div class="portfolio-overlay">
+                    🔍
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    this.portfolioGrid.innerHTML = portfolioHtml;
+    
+    // Add click event listeners
+    this.portfolioGrid.querySelectorAll('.portfolio-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            const index = parseInt(item.dataset.index);
+            this.openModal(index);
+        });
+    });
+}
+
+// نمایش در مودال فقط تصویر
+openModal(index) {
+    const item = this.imageData[index];
+    if (!item) return;
+
+    this.modalImage.src = item.path;
+    this.modalImage.alt = "Portfolio Image";
+    this.modalTitle.textContent = ""; // بدون عنوان
+    this.modalDescription.textContent = ""; // بدون توضیح
+    
+    this.modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+
+            closeModal() {
+                this.modal.classList.remove('show');
+                document.body.style.overflow = 'auto';
+            }
+
+            setupEventListeners() {
+                // Modal close events
+                window.closeModal = () => this.closeModal();
+                
+                this.modal.addEventListener('click', (e) => {
+                    if (e.target === this.modal) {
+                        this.closeModal();
+                    }
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.modal.classList.contains('show')) {
+                        this.closeModal();
+                    }
+                });
+
+                // Prevent right-click and drag on images
+                document.addEventListener('contextmenu', (e) => {
+                    if (e.target.classList.contains('no-context')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+
+                document.addEventListener('dragstart', (e) => {
+                    if (e.target.classList.contains('no-context')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+
+                // Prevent image save shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 's' && 
+                        document.activeElement.classList?.contains('no-context')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+            }
+
+            initAnimations() {
+                // Scroll animations
+                const observerOptions = {
+                    threshold: 0.1,
+                    rootMargin: '0px 0px -50px 0px'
+                };
+
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                        }
+                    });
+                }, observerOptions);
+
+                document.querySelectorAll('.fade-in').forEach(el => {
+                    observer.observe(el);
+                });
+            }
+
+            handleError(message, error) {
+                console.error(message, error);
+                this.portfolioGrid.innerHTML = `
+                    <div class="error-message">
+                        <h3>${message}</h3>
+                        <p>در حال حاضر امکان نمایش نمونه کارها وجود ندارد.</p>
+                        <p>لطفاً بعداً مجدداً تلاش کنید.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Animation and UI Manager
+        class UIManager {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupSmoothScrolling();
+                this.setupHeaderEffects();
+                this.createParticles();
+                this.setupInteractiveEffects();
+                this.setupTypingEffect();
+                this.setupPerformanceOptimizations();
+            }
+
+            setupSmoothScrolling() {
+                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                    anchor.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const target = document.querySelector(this.getAttribute('href'));
+                        if (target) {
+                            target.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }
+                    });
+                });
+            }
+
+            setupHeaderEffects() {
+                const header = document.querySelector('header');
+                let lastScrollY = 0;
+
+                window.addEventListener('scroll', () => {
+                    const currentScrollY = window.scrollY;
+
+                    if (currentScrollY > 100) {
+                        header.style.background = 'rgba(10, 10, 15, 0.98)';
+                        header.style.boxShadow = '0 5px 20px rgba(139, 92, 246, 0.3)';
+                    } else {
+                        header.style.background = 'rgba(10, 10, 15, 0.95)';
+                        header.style.boxShadow = 'none';
+                    }
+
+                    // Hide/show header on scroll
+                    if (currentScrollY > lastScrollY && currentScrollY > 200) {
+                        header.style.transform = 'translateY(-100%)';
+                    } else {
+                        header.style.transform = 'translateY(0)';
+                    }
+
+                    lastScrollY = currentScrollY;
+                });
+            }
+
+            createParticles() {
+                const particlesContainer = document.getElementById('particles');
+                const particleCount = window.innerWidth < 768 ? 25 : 50;
+
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.animationDelay = Math.random() * 20 + 's';
+                    particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                    
+                    const colors = ['#8b5cf6', '#06b6d4', '#ec4899', '#10b981'];
+                    particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    particlesContainer.appendChild(particle);
+                }
+            }
+
+            setupInteractiveEffects() {
+                // Logo glitch effect
+                const logo = document.querySelector('.logo');
+                logo.addEventListener('mouseenter', function() {
+                    this.style.animation = 'glitch 0.5s ease-in-out';
+                });
+                logo.addEventListener('animationend', function() {
+                    this.style.animation = 'none';
+                });
+
+                // Button ripple effects
+                document.querySelectorAll('.btn').forEach(btn => {
+                    btn.addEventListener('click', this.createRippleEffect.bind(this));
+                });
+
+                // Service card effects
+                document.querySelectorAll('.service-card').forEach(card => {
+                    card.addEventListener('mouseenter', function() {
+                        this.style.transform = 'translateY(-20px) scale(1.05)';
+                    });
+                    card.addEventListener('mouseleave', function() {
+                        this.style.transform = 'translateY(0) scale(1)';
+                    });
+                });
+            }
+
+            createRippleEffect(e) {
+                const button = e.currentTarget;
+                const ripple = document.createElement('span');
+                const rect = button.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+                
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                ripple.style.position = 'absolute';
+                ripple.style.borderRadius = '50%';
+                ripple.style.background = 'rgba(255, 255, 255, 0.4)';
+                ripple.style.transform = 'scale(0)';
+                ripple.style.animation = 'ripple 0.6s linear';
+                ripple.style.pointerEvents = 'none';
+                
+                button.style.position = 'relative';
+                button.style.overflow = 'hidden';
+                button.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            }
+
+            setupTypingEffect() {
+                const typeWriter = (element, text, speed = 100) => {
+                    let i = 0;
+                    element.innerHTML = '';
+                    
+                    function type() {
+                        if (i < text.length) {
+                            element.innerHTML += text.charAt(i);
+                            i++;
+                            setTimeout(type, speed);
+                        }
+                    }
+                    
+                    type();
+                };
+
+                // Initialize typing effect when page loads
+                window.addEventListener('load', () => {
+                    const heroTitle = document.querySelector('.hero-content h1');
+                    const heroSubtitle = document.querySelector('.hero-content h2');
+                    
+                    setTimeout(() => {
+                        typeWriter(heroTitle, 'NAXEL', 150);
+                    }, 500);
+                    
+                    setTimeout(() => {
+                        typeWriter(heroSubtitle, 'خالق گرافیکی • ادیتور ویدیو • طراح لوگو', 50);
+                    }, 2000);
+                });
+            }
+
+            setupPerformanceOptimizations() {
+                // Throttle scroll events for better performance
+                let ticking = false;
+                
+                const updateScrollEffects = () => {
+                    // Dynamic background colors based on scroll position
+                    const scrollPercent = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+                    const hue = (scrollPercent * 3.6);
+                    
+                    document.documentElement.style.setProperty('--accent-glow', `hsl(${hue}, 70%, 60%)`);
+                    
+                    ticking = false;
+                };
+                
+                const requestTick = () => {
+                    if (!ticking) {
+                        requestAnimationFrame(updateScrollEffects);
+                        ticking = true;
+                    }
+                };
+                
+                window.addEventListener('scroll', requestTick);
+
+                // Intersection observer for better performance
+                const progressiveObserver = new IntersectionObserver((entries) => {
+                    entries.forEach((entry, index) => {
+                        if (entry.isIntersecting) {
+                            setTimeout(() => {
+                                entry.target.style.opacity = '1';
+                                entry.target.style.transform = 'translateY(0)';
+                            }, index * 100);
+                        }
+                    });
+                }, {
+                    threshold: 0.1,
+                    rootMargin: '0px 0px -30px 0px'
+                });
+
+                // Apply progressive animation to elements
+                setTimeout(() => {
+                    document.querySelectorAll('.portfolio-item, .service-card').forEach(item => {
+                        item.style.opacity = '0';
+                        item.style.transform = 'translateY(30px)';
+                        item.style.transition = 'all 0.6s ease';
+                        progressiveObserver.observe(item);
+                    });
+                }, 100);
+            }
+        }
+
+        // Cursor Effects Manager
+        class CursorEffects {
+            constructor() {
+                this.mouseX = 0;
+                this.mouseY = 0;
+                this.trailElements = [];
+                this.init();
+            }
+
+            init() {
+                if (window.innerWidth > 768) {
+                    this.setupCursorTrail();
+                }
+            }
+
+            setupCursorTrail() {
+                document.addEventListener('mousemove', (e) => {
+                    this.mouseX = e.clientX;
+                    this.mouseY = e.clientY;
+                });
+
+                let trailTimer = 0;
+                document.addEventListener('mousemove', () => {
+                    trailTimer++;
+                    if (trailTimer % 3 === 0) {
+                        this.createTrail();
+                    }
+                });
+            }
+
+            createTrail() {
+                const trail = document.createElement('div');
+                trail.style.position = 'fixed';
+                trail.style.left = this.mouseX + 'px';
+                trail.style.top = this.mouseY + 'px';
+                trail.style.width = '6px';
+                trail.style.height = '6px';
+                trail.style.background = 'radial-gradient(circle, rgba(139,92,246,0.8) 0%, transparent 70%)';
+                trail.style.borderRadius = '50%';
+                trail.style.pointerEvents = 'none';
+                trail.style.zIndex = '9999';
+                trail.style.transition = 'all 0.5s ease-out';
+                
+                document.body.appendChild(trail);
+                this.trailElements.push(trail);
+                
+                setTimeout(() => {
+                    trail.style.opacity = '0';
+                    trail.style.transform = 'scale(0)';
+                }, 100);
+                
+                setTimeout(() => {
+                    if (trail.parentNode) {
+                        trail.parentNode.removeChild(trail);
+                    }
+                    this.trailElements = this.trailElements.filter(el => el !== trail);
+                }, 600);
+            }
+        }
+
+        // Add glitch and ripple animations to head
+        const animations = document.createElement('style');
+        animations.textContent = `
+            @keyframes glitch {
+                0% { transform: translate(0); }
+                20% { transform: translate(-2px, 2px); }
+                40% { transform: translate(-2px, -2px); }
+                60% { transform: translate(2px, 2px); }
+                80% { transform: translate(2px, -2px); }
+                100% { transform: translate(0); }
+            }
+
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+
+            /* Additional responsive improvements */
+            @media (max-width: 480px) {
+                .hero-content h1 {
+                    font-size: 2rem;
+                }
+                
+                .hero-content h2 {
+                    font-size: 1.2rem;
+                }
+                
+                .section h2 {
+                    font-size: 2.2rem;
+                }
+                
+                .portfolio-grid {
+                    grid-template-columns: 1fr;
+                }
+                
+                .services-grid {
+                    grid-template-columns: 1fr;
+                }
+                
+                .btn {
+                    padding: 0.8rem 1.5rem;
+                    font-size: 0.9rem;
+                }
+            }
+        `;
+        document.head.appendChild(animations);
+
+        // Initialize everything when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize portfolio manager
+            const portfolioManager = new PortfolioManager();
+            
+            // Initialize UI manager
+            const uiManager = new UIManager();
+            
+            // Initialize cursor effects
+            const cursorEffects = new CursorEffects();
+            
+            console.log('🎨 NAXEL Portfolio initialized successfully!');
+        });
+
+        // Service Worker for offline functionality (optional)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // You can implement service worker here for offline caching
+            });
+        }
+
+        // Performance monitoring
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const perfData = performance.getEntriesByType('navigation')[0];
+                console.log(`⚡ Page loaded in ${perfData.loadEventEnd - perfData.loadEventStart}ms`);
+            }, 0);
+        });
+    </script>
+</body>
+</html>
+
+                
+    <div class="modal" id="imageModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <img class="modal-image no-context" id="modalImage" alt="">
+            <div class="modal-info">
+                <h3 id="modalTitle"></h3>
+                <p id="modalDescription"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Services Section -->
+    <section class="section" id="services">
+        <h2 class="fade-in">خدمات من</h2>
+        <div class="services-grid">
+            <div class="service-card fade-in">
+                <div class="service-icon">🎨</div>
+                <h3>طراحی لوگو</h3>
+                <p>طراحی لوگوهای حرفه‌ای و منحصر به فرد که هویت برند شما را به بهترین شکل نمایش می‌دهند</p>
+            </div>
+            
+            <div class="service-card fade-in">
+                <div class="service-icon">🎬</div>
+                <h3>ادیت ویدیو</h3>
+                <p>ادیت حرفه‌ای ویدیوهای تبلیغاتی، آموزشی و سرگرمی با کیفیت بالا و افکت‌های خلاقانه</p>
+            </div>
+            
+            <div class="service-card fade-in">
+                <div class="service-icon">⚡</div>
+                <h3>موشن گرافیک</h3>
+                <p>ساخت انیمیشن‌های پیچیده و موثر برای تبلیغات، توضیحات و ارائه‌ها</p>
+            </div>
+            
+            <div class="service-card fade-in">
+                <div class="service-icon">🎮</div>
+                <h3>گرافیک گیمینگ</h3>
+                <p>طراحی المان‌های گرافیکی مخصوص بازی‌ها، استریمرها و محتوای گیمینگ</p>
+            </div>
+        </div>
+
+
+
+
+
+
+            <!-- Contact Section -->
+    <section class="section" id="contact">
+    <h2>تماس با من</h2>
+    <div class="contact-content">
+        <p>آماده همکاری در پروژه‌های جدید و خلاقانه هستم. برای مشاوره و سفارش کار با من در تماس باشید.</p>
+        
+        <div class="contact-info">
+            <a href="https://t.me/n6xel" class="contact-item" target="_blank">
+                <div class="contact-icon">
+                    <!-- آیکون SVG تلگرام -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+                        <circle cx="120" cy="120" r="120" fill="#37AEE2"/>
+                        <path fill="#FFF" d="M174 69L51 115c-5 2-5 8 1 10l32 10 12 39c2 6 9 8 13 4l18-18 35 26c5 3 12 1 14-5l23-110c1-6-4-10-9-8z"/>
+                    </svg>
+                </div>
+                <h3>تلگرام</h3>
+            </a>
+        </div>
+    </div>
+</section>
+
+<style>
+    /* تم دارک */
+    #contact {
+        background: #0d1117;
+        color: white;
+        padding: 40px 20px;
+        text-align: center;
+        border-radius: 12px;
+    }
+
+    /* آیکون تلگرام نئونی */
+    .contact-icon svg {
+        width: 60px;
+        height: 60px;
+        max-width: 100%;
+        filter: drop-shadow(0 0 8px rgba(55,174,226,0.8));
+        transition: transform 0.4s ease, filter 0.4s ease;
+        animation: glow 2s infinite alternate;
+    }
+
+    .contact-item {
+        display: inline-block;
+        padding: 20px;
+        background: #161b22;
+        border-radius: 12px;
+        text-decoration: none;
+        color: white;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        max-width: 100%;
+    }
+
+    .contact-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0 20px rgba(55,174,226,0.6);
+    }
+
+    .contact-item:hover .contact-icon svg {
+        transform: rotate(15deg) scale(1.1);
+        filter: drop-shadow(0 0 15px rgba(55,174,226,1));
+    }
+
+    @keyframes glow {
+        from {
+            filter: drop-shadow(0 0 8px rgba(55,174,226,0.8));
+        }
+        to {
+            filter: drop-shadow(0 0 20px rgba(55,174,226,1));
+        }
+    }
+
+    /* ریسپانسیو موبایل */
+    @media (max-width: 480px) {
+        .contact-item {
+            padding: 15px;
+        }
+        .contact-icon svg {
+            width: 50px;
+            height: 50px;
+        }
+    }
+</style>
+
+
+
+
+
+
+    <!-- Footer -->
+    <footer>
+    <div class="footer-content">
+        <div class="footer-logo">NAXEL</div>
+        <p class="footer-text">خالق گرافیکی • ادیتور ویدیو • طراح حرفه‌ای</p>
+        
+        <p class="footer-dev">
+            طراحی سایت توسط: <a href="https://t.me/abj0o" target="_blank">احسان فضلی</a>
+        </p>
+        
+        <div class="copyright">
+            <p>© 2025 NAXEL. تمامی حقوق محفوظ است.</p>
+        </div>
+    </div>
+</footer>
+
+<style>
+    footer {
+        background: #0d1117;
+        color: #fff;
+        padding: 40px 20px;
+        text-align: center;
+        border-top: 2px solid #161b22;
+        font-family: sans-serif;
+    }
+
+    .footer-logo {
+        font-size: 28px;
+        font-weight: bold;
+        color: #37AEE2;
+        text-shadow: 0 0 10px rgba(55,174,226,0.8);
+        margin-bottom: 10px;
+    }
+
+    .footer-text {
+        font-size: 16px;
+        margin-bottom: 15px;
+        color: #ccc;
+    }
+
+    .footer-dev a {
+        color: #37AEE2;
+        text-decoration: none;
+        font-weight: bold;
+        transition: text-shadow 0.3s ease;
+    }
+
+    .footer-dev a:hover {
+        text-shadow: 0 0 10px rgba(55,174,226,1);
+    }
+
+    .footer-dev {
+        margin-bottom: 20px;
+        font-size: 14px;
+        color: #aaa;
+    }
+
+    .copyright {
+        font-size: 12px;
+        color: #666;
+    }
+
+    /* ریسپانسیو موبایل */
+    @media (max-width: 480px) {
+        .footer-logo {
+            font-size: 24px;
+        }
+        .footer-text, .footer-dev {
+            font-size: 14px;
+        }
+        .copyright {
+            font-size: 11px;
+        }
+    }
+</style>
